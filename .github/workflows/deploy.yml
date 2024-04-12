@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: ssh to ec2
         uses: appleboy/ssh-action@master
-        with:                                           #로그인하기에 필요한것들 
+        with:                                           #로그인하기에 필요한것들
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
