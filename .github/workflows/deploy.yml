@@ -25,8 +25,25 @@ jobs:
       - name: Build Docker image
         run: docker build . -t djfksdl/guestbook:latest                         #<도커허브아이디>자리에 자기 아이디 쓰기
 
-      - name: Log in to Docker Hub                     #깃허브에 올라가면 비번 노출될 가능성이 있어서 실제 비번 안치고 이렇게 쓴다!
+      - name: Log in to Docker Hub                      #깃허브에 올라가면 비번 노출될 가능성이 있어서 실제 비번 안치고 이렇게 쓴다!->action에서 설정!
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Push Docker image to Docker Hub
         run: docker push djfksdl/guestbook:latest
+
+  SSH:
+    needs: build-and-deploy                             #위에 있는 build-and-deploy가 진행된다음에!
+    runs-on: ubuntu-latest                              #컴퓨터 필요하니 ubuntu로 달라
+    steps:
+      - uses: actions/checkout@v3
+      - name: ssh to ec2
+        uses: appleboy/ssh-action@master
+        with:                                           #로그인하기에 필요한것들 
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |                                     #이건 pull하기 위한 명령어들이다. 이전에 실행된것 멈추고, 지우고 다시 새로 실행
+            sudo docker pull djfksdl/guestbook:latest
+            sudo docker stop guestbook || true          
+            sudo docker rm guestbook || true
+            sudo docker run -d --name guestbook-p 9000:9000 djfksdl/guestbook:latest        
