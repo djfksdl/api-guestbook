@@ -1,0 +1,50 @@
+name: Deploy GuestbookApp             #워크플로우 이름
+
+on:                                   #이벤트 정의
+  push:
+    branches:
+      - master                        #master 깃허브에 push가 되면 작동
+          
+   
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest            #ubuntu는 리눅스의 버젼이다. 윈도우 11처럼
+    steps:
+      - name: Checkout code           #이름은 내가 임의로 정한것임
+        uses: actions/checkout@v3     #checkout(보통 깃허브에 있는 소스등을 가져와서 쓸수 있게)이라는 버젼이 있고 v3을 쓰겠다하는것
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Build Docker image
+        run: docker build . -t djfksdl/guestbook:latest                         #<도커허브아이디>자리에 자기 아이디 쓰기
+
+      - name: Log in to Docker Hub                     #깃허브에 올라가면 비번 노출될 가능성이 있어서 실제 비번 안치고 이렇게 쓴다!
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push Docker image to Docker Hub
+        run: docker push djfksdl/guestbook:latest
+        
+        
+  SSH:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: ssh to ec2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo docker pull <도커허브id>/guestbook:latest
+            sudo docker stop guestbook || true
+            sudo docker rm guestbook || true
+            sudo docker run -d --name guestbook-p 9000:9000 clz2024red/guestbook:latest

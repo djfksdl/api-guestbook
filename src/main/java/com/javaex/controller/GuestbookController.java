@@ -15,7 +15,7 @@ import com.javaex.service.GuestbookService;
 import com.javaex.vo.GuestbookVo;
 //@Controller
 @RestController //ResponseBody도 포함하고있어서 이걸로 쓰면 밑에 @ResponseBody 안써도됨. RestApi를  쓰고있으니까!
-public class GuestbookController {
+public class GuestbookController { 
 	
 	//필드
 	@Autowired
