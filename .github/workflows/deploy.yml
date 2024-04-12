@@ -46,4 +46,4 @@ jobs:
             sudo docker pull djfksdl/guestbook:latest
             sudo docker stop guestbook || true          
             sudo docker rm guestbook || true
-            sudo docker run -d --name guestbook-p 9000:9000 djfksdl/guestbook:latest        
+            sudo docker run -d --name guestbook -p 9000:9000 djfksdl/guestbook:latest        
